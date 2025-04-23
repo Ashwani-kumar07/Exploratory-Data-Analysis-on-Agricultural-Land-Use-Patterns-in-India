@@ -1,0 +1,121 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import warnings
+warnings.filterwarnings("ignore")
+
+# Load dataset
+df = pd.read_csv(r"C:\Users\Asus\OneDrive\Desktop\ProjectData.csv")
+print(df.info())
+print(df.describe())
+
+# Check for missing values
+print("\nMissing values in each column:\n", df.isna().sum()) #checking per col.
+
+# Check column names
+print("Columns:", df.columns.tolist())
+
+# Chart 1: Histogram - Net Area Sown
+plt.figure(figsize=(8, 5))
+sns.histplot(df['Net area sown'], bins=25, kde=True, color='skyblue')
+plt.title('Distribution of Net Area Sown')
+plt.xlabel('Net Area Sown')
+plt.ylabel('Count')
+plt.tight_layout()
+plt.show()
+
+# Chart 2: Bar Plot - Mean Net Area Cultivated by Category of Holdings
+plt.figure(figsize=(7, 5))
+mean_values = df.groupby('Category of holdings')['Net area cultivated'].mean().sort_values(ascending=False)
+sns.barplot(x=mean_values.index, y=mean_values.values, palette='viridis')
+plt.title('Average Net Area Cultivated by Category of Holdings')
+plt.ylabel('Mean Net Area Cultivated')
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
+
+# Chart 3: Barplot - Mean Net Area Sown by State
+state_avg = df.groupby('srcStateName')['Net area sown'].mean().sort_values(ascending=False).head(10)
+plt.figure(figsize=(10, 6))
+sns.barplot(x=state_avg.values, y=state_avg.index, palette='viridis')
+plt.title('Top 10 States by Mean Net Area Sown')
+plt.xlabel('Mean Net Area Sown')
+plt.ylabel('State')
+plt.tight_layout()
+plt.show()
+
+# Chart 4: Pie Chart - Distribution of Category of Holdings
+cat_counts = df['Category of holdings'].value_counts()
+plt.figure(figsize=(6, 6))
+plt.pie(cat_counts, labels=cat_counts.index, autopct='%1.1f%%', startangle=140)
+plt.title('Distribution of Land Holdings Categories')
+plt.tight_layout()
+plt.show()
+
+
+
+# Chart 5: Correlation Heatmap
+num_cols = ['Net area sown', 'Area under current fallows', 'Net area cultivated', 'Uncultivated area ']
+corr = df[num_cols].corr()
+plt.figure(figsize=(8, 6))
+sns.heatmap(corr, annot=True, cmap='coolwarm', fmt='.2f', linewidths=0.5,
+            linecolor='gray', square=True, cbar_kws={'shrink': 0.5})
+plt.title('Correlation Heatmap of Area Features', fontsize=14, fontweight='bold')
+plt.tight_layout()
+plt.show()
+
+
+#chart 6:  Create a box plot for 'Value' grouped by 'Group'
+plt.figure(figsize=(8, 6))
+sns.boxplot(x='Category of holdings', y='Social group type', data=df, palette='Set2')
+plt.title('Box Plot of Values by Group')
+plt.xlabel('Group')
+plt.ylabel('Value')
+plt.tight_layout()
+plt.show()
+
+
+#chart 7:  Create the scatter plot
+plt.figure(figsize=(8, 6))
+sns.scatterplot(data=df, x='Net area sown', y='Net area cultivated', hue='Category of holdings', palette='viridis')
+plt.title('Scatter Plot: Net Area Sown vs Net Area Cultivated')
+plt.xlabel('Net area sown')
+plt.ylabel('Net area cultivated')
+plt.tight_layout()
+plt.show()
+
+# --- Linear Regression ----
+
+# Prepare features and target variable
+x = df['Net area sown'].values
+y = df['Net area cultivated'].values
+
+
+# Manual train-test split using pandas
+train = df.sample(frac=0.8, random_state=42)
+test = df.drop(train.index)
+x_train = train['Net area sown'].values
+y_train = train['Net area cultivated'].values
+x_test = test['Net area sown'].values
+y_test = test['Net area cultivated'].values
+
+# Fit linear regression using NumPy's polyfit on the training set
+slope, intercept = np.polyfit(x_train, y_train, 1)
+
+# Prediction example for Net area sown = 5000
+pred_5000 = slope * 5000 + intercept
+print("Predicted Net Area Cultivated for 5000 Net Area Sown:", pred_5000)
+
+
+
+# Plot regression line 
+plt.figure(figsize=(8, 5))
+plt.scatter(x, y, color="green", label="Data Points")
+plt.plot(x, slope * x + intercept, color='red', linewidth=3, label="Regression Line")
+plt.xlabel("Net area sown")
+plt.ylabel("Net area cultivated")
+plt.title("Linear Regression Fit")
+plt.legend()
+plt.tight_layout()
+plt.show()
